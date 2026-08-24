@@ -63,23 +63,9 @@ public class PlayerController : MonoBehaviour
         Keyboard keyboard = Keyboard.current;
         if (keyboard == null) return;
 
-        float x = 0f;
-        float z = 0f;
-
-        if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) x -= 1f;
-        if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) x += 1f;
-        if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) z -= 1f;
-        if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) z += 1f;
-
-        // movement is relative to where the player is facing (standard FPS controls)
-        Vector3 move = transform.right * x + transform.forward * z;
-        if (move.sqrMagnitude > 1f) move.Normalize();
-
-        bool sprinting = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
-        float currentSpeed = sprinting ? moveSpeed * sprintMultiplier : moveSpeed;
-        controller.Move(move * currentSpeed * Time.deltaTime);
-
+        // read grounded state once, before doing any Move() this frame
         bool grounded = controller.isGrounded;
+
         if (grounded && verticalVelocity.y < 0f)
         {
             verticalVelocity.y = -2f;
@@ -92,6 +78,24 @@ public class PlayerController : MonoBehaviour
         }
 
         verticalVelocity.y += gravity * Time.deltaTime;
-        controller.Move(verticalVelocity * Time.deltaTime);
+
+        float x = 0f;
+        float z = 0f;
+
+        if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed) x -= 1f;
+        if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed) x += 1f;
+        if (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed) z -= 1f;
+        if (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed) z += 1f;
+
+        // movement is relative to where the player is facing (standard FPS controls)
+        Vector3 horizontalMove = transform.right * x + transform.forward * z;
+        if (horizontalMove.sqrMagnitude > 1f) horizontalMove.Normalize();
+
+        bool sprinting = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
+        float currentSpeed = sprinting ? moveSpeed * sprintMultiplier : moveSpeed;
+
+        // combine horizontal + vertical into a single Move() call per frame
+        Vector3 fullMove = horizontalMove * currentSpeed + new Vector3(0f, verticalVelocity.y, 0f);
+        controller.Move(fullMove * Time.deltaTime);
     }
 }
