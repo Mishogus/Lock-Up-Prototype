@@ -13,6 +13,18 @@ public static class SceneBuilder
     [MenuItem("Lock Up/Build Full Prison")]
     public static void BuildFullPrison()
     {
+        try
+        {
+            BuildFullPrisonInternal();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("BuildFullPrison failed: " + e);
+        }
+    }
+
+    private static void BuildFullPrisonInternal()
+    {
         ClearGenerated();
         GameObject root = new GameObject("Generated");
 
@@ -300,13 +312,38 @@ public static class SceneBuilder
         exit.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(new Color(0.1f, 1f, 0.1f));
     }
 
+    private static readonly Dictionary<Color, Material> MaterialCache = new Dictionary<Color, Material>();
+
     private static Material MakeColorMaterial(Color color)
     {
+        if (MaterialCache.TryGetValue(color, out Material cached) && cached != null)
+            return cached;
+
+        const string folder = "Assets/GeneratedMaterials";
+        if (!AssetDatabase.IsValidFolder(folder))
+        {
+            AssetDatabase.CreateFolder("Assets", "GeneratedMaterials");
+        }
+
+        string colorTag = $"{Mathf.RoundToInt(color.r * 255)}_{Mathf.RoundToInt(color.g * 255)}_{Mathf.RoundToInt(color.b * 255)}";
+        string path = $"{folder}/Color_{colorTag}.mat";
+
+        Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (existing != null)
+        {
+            MaterialCache[color] = existing;
+            return existing;
+        }
+
         Shader shader = Shader.Find("Universal Render Pipeline/Lit");
         if (shader == null) shader = Shader.Find("Standard");
         Material mat = new Material(shader);
         if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
         if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+
+        AssetDatabase.CreateAsset(mat, path);
+        AssetDatabase.SaveAssets();
+        MaterialCache[color] = mat;
         return mat;
     }
 
