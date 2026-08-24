@@ -82,10 +82,27 @@ public static class SceneBuilder
 
     // ---- helpers ----
 
+    // names used by older versions of this builder that didn't parent everything
+    // under "Generated" (destroying Player also destroys its child Main Camera)
+    private static readonly string[] LegacyLooseNames =
+    {
+        "Floor", "Player", "Wall_North", "Wall_South", "Wall_East", "Wall_West"
+    };
+
     private static void ClearGenerated()
     {
         GameObject existing = GameObject.Find("Generated");
         if (existing != null) Object.DestroyImmediate(existing);
+
+        foreach (string name in LegacyLooseNames)
+        {
+            GameObject legacy = GameObject.Find(name);
+            // only remove root-level (unparented) objects, never touch things nested under Generated
+            if (legacy != null && legacy.transform.parent == null)
+            {
+                Object.DestroyImmediate(legacy);
+            }
+        }
     }
 
     private static GameObject CreatePlayer(Transform parent, Vector3 spawnPosition)
