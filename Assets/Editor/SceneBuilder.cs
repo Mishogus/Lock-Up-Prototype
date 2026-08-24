@@ -2,33 +2,98 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-// One-click prototype room builder.
-// In Unity, use the menu: Lock Up > Build Prototype Room
+// Prototype level builders.
+// In Unity, use the menu: Lock Up > Build Full Prison  (or Build Single Room for a quick test)
 public static class SceneBuilder
 {
-    [MenuItem("Lock Up/Build Prototype Room")]
-    public static void BuildPrototypeRoom()
+    private const float WallHeight = 4f;
+    private const float WallThickness = 1f;
+
+    [MenuItem("Lock Up/Build Full Prison")]
+    public static void BuildFullPrison()
     {
-        // Floor (30x30 units)
+        ClearGenerated();
+        GameObject root = new GameObject("Generated");
+
+        // Footprint: X from -12 to 12 (width 24), Z from 0 to 100 (length 100)
+        // Zones along Z: Cell Block [0,20] -> Work Area [20,45] -> Guard Room [45,65] -> Yard [65,100]
+        float minX = -12f, maxX = 12f;
+        float minZ = 0f, maxZ = 100f;
+        float width = maxX - minX;
+        float length = maxZ - minZ;
+
+        // Floor
         GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
         floor.name = "Floor";
+        floor.transform.SetParent(root.transform);
+        floor.transform.position = new Vector3((minX + maxX) / 2f, 0f, (minZ + maxZ) / 2f);
+        floor.transform.localScale = new Vector3(width / 10f, 1f, length / 10f);
+
+        // Outer perimeter walls (west, east, south = solid; north has the exit gap)
+        CreateWall("Wall_West", root.transform, new Vector3(minX, WallHeight / 2f, (minZ + maxZ) / 2f), new Vector3(WallThickness, WallHeight, length));
+        CreateWall("Wall_East", root.transform, new Vector3(maxX, WallHeight / 2f, (minZ + maxZ) / 2f), new Vector3(WallThickness, WallHeight, length));
+        CreateWall("Wall_South", root.transform, new Vector3((minX + maxX) / 2f, WallHeight / 2f, minZ), new Vector3(width, WallHeight, WallThickness));
+
+        // North wall with a gap in the middle for the exit doorway
+        CreateDividerWithGap("Wall_North", root.transform, maxZ, minX, maxX, 4f);
+
+        // Divider walls between zones, each with a 4-unit doorway gap in the middle
+        CreateDividerWithGap("Divider_CellBlock_WorkArea", root.transform, 20f, minX, maxX, 4f);
+        CreateDividerWithGap("Divider_WorkArea_GuardRoom", root.transform, 45f, minX, maxX, 4f);
+        CreateDividerWithGap("Divider_GuardRoom_Yard", root.transform, 65f, minX, maxX, 4f);
+
+        // Zone floor markers (visual only, no collision) so the areas are distinguishable
+        CreateZoneMarker("CellBlock", root.transform, new Vector3(0f, 0f, 10f), width, 20f, new Color(0.4f, 0.4f, 0.5f));
+        CreateZoneMarker("WorkArea", root.transform, new Vector3(0f, 0f, 32.5f), width, 25f, new Color(0.5f, 0.45f, 0.3f));
+        CreateZoneMarker("GuardRoom", root.transform, new Vector3(0f, 0f, 55f), width, 20f, new Color(0.55f, 0.25f, 0.25f));
+        CreateZoneMarker("Yard", root.transform, new Vector3(0f, 0f, 82.5f), width, 35f, new Color(0.3f, 0.5f, 0.3f));
+
+        // Exit point marker just past the north wall gap
+        CreateExitPoint(root.transform, new Vector3(0f, 0.1f, maxZ + 3f));
+
+        // Player, spawned in the Cell Block
+        GameObject player = CreatePlayer(root.transform, new Vector3(0f, 1f, 8f));
+
+        FinishAndSave($"Full prison built: cell block, work area, guard room, yard, exit point. Player spawned in cell block. Scene saved.");
+    }
+
+    [MenuItem("Lock Up/Build Single Room (quick test)")]
+    public static void BuildSingleRoom()
+    {
+        ClearGenerated();
+        GameObject root = new GameObject("Generated");
+
+        GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        floor.name = "Floor";
+        floor.transform.SetParent(root.transform);
         floor.transform.position = Vector3.zero;
         floor.transform.localScale = new Vector3(3f, 1f, 3f);
 
-        // Four walls forming a square room around the floor
         float half = 15f;
-        float wallHeight = 4f;
-        float wallThickness = 1f;
+        CreateWall("Wall_North", root.transform, new Vector3(0, WallHeight / 2f, half), new Vector3(30f, WallHeight, WallThickness));
+        CreateWall("Wall_South", root.transform, new Vector3(0, WallHeight / 2f, -half), new Vector3(30f, WallHeight, WallThickness));
+        CreateWall("Wall_East", root.transform, new Vector3(half, WallHeight / 2f, 0), new Vector3(WallThickness, WallHeight, 30f));
+        CreateWall("Wall_West", root.transform, new Vector3(-half, WallHeight / 2f, 0), new Vector3(WallThickness, WallHeight, 30f));
 
-        CreateWall("Wall_North", new Vector3(0, wallHeight / 2f, half), new Vector3(30f, wallHeight, wallThickness));
-        CreateWall("Wall_South", new Vector3(0, wallHeight / 2f, -half), new Vector3(30f, wallHeight, wallThickness));
-        CreateWall("Wall_East", new Vector3(half, wallHeight / 2f, 0), new Vector3(wallThickness, wallHeight, 30f));
-        CreateWall("Wall_West", new Vector3(-half, wallHeight / 2f, 0), new Vector3(wallThickness, wallHeight, 30f));
+        GameObject player = CreatePlayer(root.transform, new Vector3(0f, 1f, 0f));
 
-        // Player capsule with a CharacterController + our movement script
+        FinishAndSave("Single test room built. Scene saved.");
+    }
+
+    // ---- helpers ----
+
+    private static void ClearGenerated()
+    {
+        GameObject existing = GameObject.Find("Generated");
+        if (existing != null) Object.DestroyImmediate(existing);
+    }
+
+    private static GameObject CreatePlayer(Transform parent, Vector3 spawnPosition)
+    {
         GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         player.name = "Player";
-        player.transform.position = new Vector3(0f, 1f, 0f);
+        player.transform.SetParent(parent);
+        player.transform.position = spawnPosition;
 
         Object.DestroyImmediate(player.GetComponent<CapsuleCollider>());
         CharacterController cc = player.AddComponent<CharacterController>();
@@ -36,10 +101,12 @@ public static class SceneBuilder
         cc.height = 2f;
         cc.radius = 0.5f;
 
-        player.AddComponent<PlayerController>();
+        PlayerController pc = player.AddComponent<PlayerController>();
 
-        // Camera: parented to the player, angled top-down view (fits a stealth prototype),
-        // and uses a solid color instead of the skybox shader that errored earlier.
+        // hide the capsule's own body mesh from the first-person view so it doesn't block the camera
+        MeshRenderer bodyRenderer = player.GetComponent<MeshRenderer>();
+        if (bodyRenderer != null) bodyRenderer.enabled = false;
+
         Camera mainCam = Camera.main;
         if (mainCam == null)
         {
@@ -48,22 +115,77 @@ public static class SceneBuilder
             camObj.tag = "MainCamera";
         }
         mainCam.transform.SetParent(player.transform);
-        mainCam.transform.localPosition = new Vector3(0f, 6f, -6f);
-        mainCam.transform.localRotation = Quaternion.Euler(45f, 0f, 0f);
+        mainCam.transform.localPosition = new Vector3(0f, 1.7f, 0.15f); // eye height, first-person
+        mainCam.transform.localRotation = Quaternion.identity;
         mainCam.clearFlags = CameraClearFlags.SolidColor;
         mainCam.backgroundColor = new Color(0.5f, 0.5f, 0.5f);
 
-        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        pc.cameraTransform = mainCam.transform;
 
-        Debug.Log("Prototype room built: floor, 4 walls, player with WASD movement, camera attached. Scene saved.");
+        return player;
     }
 
-    private static void CreateWall(string name, Vector3 position, Vector3 scale)
+    private static void CreateWall(string name, Transform parent, Vector3 position, Vector3 scale)
     {
         GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
         wall.name = name;
+        wall.transform.SetParent(parent);
         wall.transform.position = position;
         wall.transform.localScale = scale;
+    }
+
+    // Builds a wall across [minX,maxX] at the given Z, split into two segments with a doorway gap in the middle
+    private static void CreateDividerWithGap(string name, Transform parent, float z, float minX, float maxX, float gapWidth)
+    {
+        float totalWidth = maxX - minX;
+        float segmentWidth = (totalWidth - gapWidth) / 2f;
+
+        float leftCenter = minX + segmentWidth / 2f;
+        float rightCenter = maxX - segmentWidth / 2f;
+
+        CreateWall(name + "_Left", parent, new Vector3(leftCenter, WallHeight / 2f, z), new Vector3(segmentWidth, WallHeight, WallThickness));
+        CreateWall(name + "_Right", parent, new Vector3(rightCenter, WallHeight / 2f, z), new Vector3(segmentWidth, WallHeight, WallThickness));
+    }
+
+    private static void CreateZoneMarker(string name, Transform parent, Vector3 center, float width, float depth, Color color)
+    {
+        GameObject marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        marker.name = name + "_ZoneMarker";
+        marker.transform.SetParent(parent);
+        marker.transform.position = center + new Vector3(0f, 0.02f, 0f);
+        marker.transform.localScale = new Vector3(width - WallThickness, 0.02f, depth);
+        Object.DestroyImmediate(marker.GetComponent<BoxCollider>());
+        marker.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(color);
+    }
+
+    private static void CreateExitPoint(Transform parent, Vector3 position)
+    {
+        GameObject exit = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        exit.name = "ExitPoint";
+        exit.transform.SetParent(parent);
+        exit.transform.position = position;
+        exit.transform.localScale = new Vector3(4f, 0.2f, 4f);
+
+        BoxCollider col = exit.GetComponent<BoxCollider>();
+        col.isTrigger = true;
+
+        exit.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(new Color(0.1f, 1f, 0.1f));
+    }
+
+    private static Material MakeColorMaterial(Color color)
+    {
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null) shader = Shader.Find("Standard");
+        Material mat = new Material(shader);
+        if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+        if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+        return mat;
+    }
+
+    private static void FinishAndSave(string logMessage)
+    {
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        Debug.Log(logMessage);
     }
 }
