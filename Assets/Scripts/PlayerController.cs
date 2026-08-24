@@ -1,14 +1,16 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// First-person WASD movement + mouse look for the prototype.
+// First-person movement + mouse look for the prototype.
 // Uses the new Input System (this project has it set as the only active handler).
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    public float gravity = -9.81f;
-    public float mouseSensitivity = 2f;
+    public float moveSpeed = 8f;
+    public float sprintMultiplier = 1.8f;
+    public float jumpHeight = 1.4f;
+    public float gravity = -18f;
+    public float mouseSensitivity = 8f;
     public Transform cameraTransform; // assigned by SceneBuilder to the child camera
 
     private CharacterController controller;
@@ -52,7 +54,7 @@ public class PlayerController : MonoBehaviour
 
         // pitch only rotates the camera
         pitch -= mouseY;
-        pitch = Mathf.Clamp(pitch, -80f, 80f);
+        pitch = Mathf.Clamp(pitch, -85f, 85f);
         cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
@@ -73,16 +75,23 @@ public class PlayerController : MonoBehaviour
         Vector3 move = transform.right * x + transform.forward * z;
         if (move.sqrMagnitude > 1f) move.Normalize();
 
-        controller.Move(move * moveSpeed * Time.deltaTime);
+        bool sprinting = keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed;
+        float currentSpeed = sprinting ? moveSpeed * sprintMultiplier : moveSpeed;
+        controller.Move(move * currentSpeed * Time.deltaTime);
 
-        if (controller.isGrounded && verticalVelocity.y < 0f)
+        bool grounded = controller.isGrounded;
+        if (grounded && verticalVelocity.y < 0f)
         {
             verticalVelocity.y = -2f;
         }
-        else
+
+        if (grounded && keyboard.spaceKey.wasPressedThisFrame)
         {
-            verticalVelocity.y += gravity * Time.deltaTime;
+            // v = sqrt(2 * g * h)
+            verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
+
+        verticalVelocity.y += gravity * Time.deltaTime;
         controller.Move(verticalVelocity * Time.deltaTime);
     }
 }

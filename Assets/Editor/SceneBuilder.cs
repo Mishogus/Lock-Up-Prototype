@@ -26,32 +26,35 @@ public static class SceneBuilder
         float roofY = 10f;
 
         // ---------------- GROUND FLOOR: Guard Room (south) + Work Area (north) ----------------
-        BuildFloorSlab("GroundFloor", root.transform, bMinX, bMaxX, bMinZ, bMaxZ, groundY);
+        Color groundWallColor = new Color(0.5f, 0.42f, 0.35f);
+        BuildFloorSlab("GroundFloor", root.transform, bMinX, bMaxX, bMinZ, bMaxZ, groundY, new Color(0.55f, 0.5f, 0.45f));
 
-        CreateWall("Ground_Wall_West", root.transform, new Vector3(bMinX, groundY + WallHeight / 2f, (bMinZ + bMaxZ) / 2f), new Vector3(WallThickness, WallHeight, bMaxZ - bMinZ));
-        CreateWall("Ground_Wall_South", root.transform, new Vector3((bMinX + bMaxX) / 2f, groundY + WallHeight / 2f, bMinZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness));
-        CreateWall("Ground_Wall_North", root.transform, new Vector3((bMinX + bMaxX) / 2f, groundY + WallHeight / 2f, bMaxZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness));
+        CreateWall("Ground_Wall_West", root.transform, new Vector3(bMinX, groundY + WallHeight / 2f, (bMinZ + bMaxZ) / 2f), new Vector3(WallThickness, WallHeight, bMaxZ - bMinZ), groundWallColor);
+        CreateWall("Ground_Wall_South", root.transform, new Vector3((bMinX + bMaxX) / 2f, groundY + WallHeight / 2f, bMinZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness), groundWallColor);
+        CreateWall("Ground_Wall_North", root.transform, new Vector3((bMinX + bMaxX) / 2f, groundY + WallHeight / 2f, bMaxZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness), groundWallColor);
         // east wall: one gap for the stairwell entrance
-        CreateGappedWallAlongZ("Ground_Wall_East", root.transform, bMaxX, bMinZ, bMaxZ, new float[] { -18f }, 4f, groundY, WallHeight);
+        CreateGappedWallAlongZ("Ground_Wall_East", root.transform, bMaxX, bMinZ, bMaxZ, new float[] { -18f }, 4f, groundY, WallHeight, groundWallColor);
         // split into Guard Room (south) / Work Area (north)
-        CreateGappedWallAlongX("Ground_Divider", root.transform, 0f, bMinX, bMaxX, new float[] { 0f }, 4f, groundY, WallHeight);
+        CreateGappedWallAlongX("Ground_Divider", root.transform, 0f, bMinX, bMaxX, new float[] { 0f }, 4f, groundY, WallHeight, groundWallColor);
 
         CreateZoneMarker("GuardRoom", root.transform, new Vector3(0f, groundY, -10f), bMaxX - bMinX - WallThickness, 20f, new Color(0.55f, 0.25f, 0.25f));
         CreateZoneMarker("WorkArea", root.transform, new Vector3(0f, groundY, 10f), bMaxX - bMinX - WallThickness, 20f, new Color(0.5f, 0.45f, 0.3f));
 
         // ---------------- FLOOR 2: Cell Block (corridor on the east, cells on the west) ----------------
-        BuildFloorSlab("CellFloor", root.transform, bMinX, bMaxX, bMinZ, bMaxZ, cellFloorY);
+        Color cellWallColor = new Color(0.35f, 0.42f, 0.55f);
+        Color cellDividerColor = new Color(0.28f, 0.33f, 0.45f);
+        BuildFloorSlab("CellFloor", root.transform, bMinX, bMaxX, bMinZ, bMaxZ, cellFloorY, new Color(0.45f, 0.48f, 0.58f));
 
-        CreateWall("Cell_Wall_West", root.transform, new Vector3(bMinX, cellFloorY + WallHeight / 2f, (bMinZ + bMaxZ) / 2f), new Vector3(WallThickness, WallHeight, bMaxZ - bMinZ));
-        CreateWall("Cell_Wall_South", root.transform, new Vector3((bMinX + bMaxX) / 2f, cellFloorY + WallHeight / 2f, bMinZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness));
-        CreateWall("Cell_Wall_North", root.transform, new Vector3((bMinX + bMaxX) / 2f, cellFloorY + WallHeight / 2f, bMaxZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness));
+        CreateWall("Cell_Wall_West", root.transform, new Vector3(bMinX, cellFloorY + WallHeight / 2f, (bMinZ + bMaxZ) / 2f), new Vector3(WallThickness, WallHeight, bMaxZ - bMinZ), cellWallColor);
+        CreateWall("Cell_Wall_South", root.transform, new Vector3((bMinX + bMaxX) / 2f, cellFloorY + WallHeight / 2f, bMinZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness), cellWallColor);
+        CreateWall("Cell_Wall_North", root.transform, new Vector3((bMinX + bMaxX) / 2f, cellFloorY + WallHeight / 2f, bMaxZ), new Vector3(bMaxX - bMinX, WallHeight, WallThickness), cellWallColor);
         // east wall: one gap where the stairwell lands
-        CreateGappedWallAlongZ("Cell_Wall_East", root.transform, bMaxX, bMinZ, bMaxZ, new float[] { -2f }, 4f, cellFloorY, WallHeight);
+        CreateGappedWallAlongZ("Cell_Wall_East", root.transform, bMaxX, bMinZ, bMaxZ, new float[] { -2f }, 4f, cellFloorY, WallHeight, cellWallColor);
 
         // corridor / cells divider at X=14, with a door gap per cell
         float corridorX = 14f;
         float[] cellCenters = { -16f, -8f, 0f, 8f, 16f };
-        CreateGappedWallAlongZ("Cell_CorridorWall", root.transform, corridorX, bMinZ, bMaxZ, cellCenters, 3f, cellFloorY, WallHeight);
+        CreateGappedWallAlongZ("Cell_CorridorWall", root.transform, corridorX, bMinZ, bMaxZ, cellCenters, 3f, cellFloorY, WallHeight, cellDividerColor);
 
         // cross walls separating the 5 cells from each other
         float[] cellBoundaries = { -12f, -4f, 4f, 12f };
@@ -59,7 +62,7 @@ public static class SceneBuilder
         {
             CreateWall("Cell_CrossWall_" + i, root.transform,
                 new Vector3((bMinX + corridorX) / 2f, cellFloorY + WallHeight / 2f, cellBoundaries[i]),
-                new Vector3(corridorX - bMinX, WallHeight, WallThickness));
+                new Vector3(corridorX - bMinX, WallHeight, WallThickness), cellDividerColor);
         }
 
         CreateZoneMarker("Corridor", root.transform, new Vector3((corridorX + bMaxX) / 2f, cellFloorY, 0f), bMaxX - corridorX, bMaxZ - bMinZ, new Color(0.4f, 0.4f, 0.5f));
@@ -70,13 +73,14 @@ public static class SceneBuilder
 
         // ---------------- ROOF: Yard (open-air, low fence instead of walls) ----------------
         float fenceHeight = 2.5f;
-        BuildFloorSlab("RoofFloor", root.transform, bMinX, bMaxX, bMinZ, bMaxZ, roofY);
+        Color fenceColor = new Color(0.35f, 0.55f, 0.4f);
+        BuildFloorSlab("RoofFloor", root.transform, bMinX, bMaxX, bMinZ, bMaxZ, roofY, new Color(0.45f, 0.6f, 0.45f));
 
-        CreateWall("Roof_Fence_West", root.transform, new Vector3(bMinX, roofY + fenceHeight / 2f, (bMinZ + bMaxZ) / 2f), new Vector3(WallThickness, fenceHeight, bMaxZ - bMinZ));
-        CreateWall("Roof_Fence_South", root.transform, new Vector3((bMinX + bMaxX) / 2f, roofY + fenceHeight / 2f, bMinZ), new Vector3(bMaxX - bMinX, fenceHeight, WallThickness));
-        CreateGappedWallAlongZ("Roof_Fence_East", root.transform, bMaxX, bMinZ, bMaxZ, new float[] { 18f }, 4f, roofY, fenceHeight);
+        CreateWall("Roof_Fence_West", root.transform, new Vector3(bMinX, roofY + fenceHeight / 2f, (bMinZ + bMaxZ) / 2f), new Vector3(WallThickness, fenceHeight, bMaxZ - bMinZ), fenceColor);
+        CreateWall("Roof_Fence_South", root.transform, new Vector3((bMinX + bMaxX) / 2f, roofY + fenceHeight / 2f, bMinZ), new Vector3(bMaxX - bMinX, fenceHeight, WallThickness), fenceColor);
+        CreateGappedWallAlongZ("Roof_Fence_East", root.transform, bMaxX, bMinZ, bMaxZ, new float[] { 18f }, 4f, roofY, fenceHeight, fenceColor);
         // north fence has the exit gap
-        CreateGappedWallAlongX("Roof_Fence_North", root.transform, bMaxZ, bMinX, bMaxX, new float[] { 0f }, 4f, roofY, fenceHeight);
+        CreateGappedWallAlongX("Roof_Fence_North", root.transform, bMaxZ, bMinX, bMaxX, new float[] { 0f }, 4f, roofY, fenceHeight, fenceColor);
 
         CreateZoneMarker("Yard", root.transform, new Vector3(0f, roofY, 0f), bMaxX - bMinX - WallThickness, bMaxZ - bMinZ - WallThickness, new Color(0.3f, 0.5f, 0.3f));
         CreateExitPoint(root.transform, new Vector3(0f, roofY + 0.1f, bMaxZ + 3f));
@@ -149,13 +153,14 @@ public static class SceneBuilder
         }
     }
 
-    private static void BuildFloorSlab(string name, Transform parent, float minX, float maxX, float minZ, float maxZ, float y)
+    private static void BuildFloorSlab(string name, Transform parent, float minX, float maxX, float minZ, float maxZ, float y, Color? color = null)
     {
         GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
         floor.name = name;
         floor.transform.SetParent(parent);
         floor.transform.position = new Vector3((minX + maxX) / 2f, y, (minZ + maxZ) / 2f);
         floor.transform.localScale = new Vector3((maxX - minX) / 10f, 1f, (maxZ - minZ) / 10f);
+        floor.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(color ?? new Color(0.6f, 0.6f, 0.62f));
     }
 
     private static GameObject CreatePlayer(Transform parent, Vector3 spawnPosition)
@@ -195,17 +200,20 @@ public static class SceneBuilder
         return player;
     }
 
-    private static void CreateWall(string name, Transform parent, Vector3 position, Vector3 scale)
+    private static readonly Color DefaultWallColor = new Color(0.55f, 0.55f, 0.58f);
+
+    private static void CreateWall(string name, Transform parent, Vector3 position, Vector3 scale, Color? color = null)
     {
         GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
         wall.name = name;
         wall.transform.SetParent(parent);
         wall.transform.position = position;
         wall.transform.localScale = scale;
+        wall.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(color ?? DefaultWallColor);
     }
 
     // wall running along X at a fixed Z, with door gaps (in X) at the given centers
-    private static void CreateGappedWallAlongX(string name, Transform parent, float z, float minX, float maxX, float[] gapCenters, float gapWidth, float yBase, float wallHeight)
+    private static void CreateGappedWallAlongX(string name, Transform parent, float z, float minX, float maxX, float[] gapCenters, float gapWidth, float yBase, float wallHeight, Color? color = null)
     {
         List<float> centers = new List<float>(gapCenters);
         centers.Sort();
@@ -217,14 +225,14 @@ public static class SceneBuilder
             {
                 float segLen = segEnd - cursor;
                 float segCenter = cursor + segLen / 2f;
-                CreateWall(name + "_Seg" + i, parent, new Vector3(segCenter, yBase + wallHeight / 2f, z), new Vector3(segLen, wallHeight, WallThickness));
+                CreateWall(name + "_Seg" + i, parent, new Vector3(segCenter, yBase + wallHeight / 2f, z), new Vector3(segLen, wallHeight, WallThickness), color);
             }
             if (i < centers.Count) cursor = centers[i] + gapWidth / 2f;
         }
     }
 
     // wall running along Z at a fixed X, with door gaps (in Z) at the given centers
-    private static void CreateGappedWallAlongZ(string name, Transform parent, float x, float minZ, float maxZ, float[] gapCenters, float gapWidth, float yBase, float wallHeight)
+    private static void CreateGappedWallAlongZ(string name, Transform parent, float x, float minZ, float maxZ, float[] gapCenters, float gapWidth, float yBase, float wallHeight, Color? color = null)
     {
         List<float> centers = new List<float>(gapCenters);
         centers.Sort();
@@ -236,14 +244,14 @@ public static class SceneBuilder
             {
                 float segLen = segEnd - cursor;
                 float segCenter = cursor + segLen / 2f;
-                CreateWall(name + "_Seg" + i, parent, new Vector3(x, yBase + wallHeight / 2f, segCenter), new Vector3(WallThickness, wallHeight, segLen));
+                CreateWall(name + "_Seg" + i, parent, new Vector3(x, yBase + wallHeight / 2f, segCenter), new Vector3(WallThickness, wallHeight, segLen), color);
             }
             if (i < centers.Count) cursor = centers[i] + gapWidth / 2f;
         }
     }
 
     // solid stepped staircase (each step is a solid block up to its tread height, reliable for CharacterController)
-    private static void CreateStaircase(string name, Transform parent, float xCenter, float zStart, float zEnd, float yBase, float totalRise, float width)
+    private static void CreateStaircase(string name, Transform parent, float xCenter, float zStart, float zEnd, float yBase, float totalRise, float width, Color? color = null)
     {
         float stepHeight = 0.25f;
         int steps = Mathf.Max(1, Mathf.CeilToInt(totalRise / stepHeight));
@@ -263,6 +271,7 @@ public static class SceneBuilder
             // solid block from yBase up to topY, so there are no gaps underneath any step
             step.transform.position = new Vector3(xCenter, yBase + blockHeight / 2f, z);
             step.transform.localScale = new Vector3(width, blockHeight, stepDepth);
+            step.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(color ?? new Color(0.75f, 0.55f, 0.2f));
         }
     }
 
