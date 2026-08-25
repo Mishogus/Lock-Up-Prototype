@@ -416,6 +416,7 @@ public static class SceneBuilder
         exit.transform.localScale = new Vector3(2f, 0.2f, 2f);
         exit.GetComponent<BoxCollider>().isTrigger = true;
         exit.GetComponent<MeshRenderer>().sharedMaterial = MakeColorMaterial(new Color(0.1f, 1f, 0.1f));
+        exit.AddComponent<ExitTrigger>();
     }
 
     // ---- furniture helpers ----
