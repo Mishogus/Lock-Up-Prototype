@@ -1,4 +1,0 @@
-repository "Lock UP/Lock UP@9072415485709@cloud"
-  path "/"
-    br "/main"
-    co "/main"
