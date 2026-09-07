@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 29
-  productGUID: fb3c41e69a9254e6c93d864d3cb2a711
+  productGUID: a3f8d64bcf680b44e84b1cf8b670a1bd
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: Lock UP
+  productName: Lock up
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -851,14 +851,14 @@ PlayerSettings:
   editorAssembliesCompatibilityLevel: 1
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: Lock UP
+  metroPackageName: Lock up
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: Lock UP
+  metroApplicationDescription: Lock up
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -929,10 +929,10 @@ PlayerSettings:
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
   enableDirectStorage: 0
-  cloudProjectId: f1255c28-f95b-41e7-a93a-58d95c054587
+  cloudProjectId: c898cde2-3f75-48ac-b91b-8b40f3da018e
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: Lock UP
+  projectName: Lock up
   organizationId: unity_5e3d4790aa8581412533
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
